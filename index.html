@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Wordplay (Haptic Feedback)</title>
+    <title>Wordplay (Haptic Fix)</title>
     <style>
         :root {
             /* Light Theme */
@@ -837,9 +837,11 @@
                 state.foundWordsList.unshift({ word: word, points: points });
                 setMessage("Found: " + word);
                 
-                // Haptic Feedback
+                // --- HAPTIC FEEDBACK ADDITION ---
+                // Pattern: Vibrate 50ms, pause 50ms, vibrate 50ms (Double-tap)
+                // This is sharper and more distinct on Android
                 if (navigator.vibrate) {
-                    navigator.vibrate(200);
+                    navigator.vibrate([50, 50, 50]);
                 }
 
                 updateListUI();
