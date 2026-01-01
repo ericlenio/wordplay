@@ -1,3 +1,4 @@
+const VERSION = "1.0.1";
 // --- Configuration ---
 const DICT_URL = "https://raw.githubusercontent.com/jesstess/Scrabble/master/scrabble/sowpods.txt";
 const DEF_API_URL = "https://api.dictionaryapi.dev/api/v2/entries/en/";
@@ -135,6 +136,16 @@ function generateGridLetters() {
 
 function initGame() {
     if (!state.isDictLoaded) return;
+
+    // Display Version Watermark
+    let versionEl = document.getElementById('version-watermark');
+    if (!versionEl) {
+        versionEl = document.createElement('div');
+        versionEl.id = 'version-watermark';
+        versionEl.style.cssText = "position:fixed; bottom:5px; right:5px; opacity:0.3; font-size:0.7rem; pointer-events:none; z-index:100; font-family:sans-serif;";
+        document.body.appendChild(versionEl);
+    }
+    versionEl.innerText = typeof VERSION !== 'undefined' ? "v" + VERSION : "";
 
     const loader = document.getElementById('grid-loader');
     const loaderText = document.getElementById('loader-msg');
