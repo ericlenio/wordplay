@@ -557,7 +557,18 @@ function renderSummaryGrid() {
 window.previewWord = function(indicesJson) {
     if (navigator.vibrate) navigator.vibrate(20);
 
-    const indices = JSON.parse(indicesJson);
+    // FIX: indicesJson is already a string here
+    let indices;
+    if (typeof indicesJson === 'string') {
+        try {
+           indices = JSON.parse(indicesJson);
+        } catch (e) {
+           console.error("Failed to parse indices", e);
+           return;
+        }
+    } else {
+        indices = indicesJson;
+    }
     
     document.querySelectorAll('.sum-tile').forEach(t => t.classList.remove('preview-path'));
     
@@ -572,6 +583,11 @@ function endGame(title = "Game Over") {
     state.isPlaying = false;
     document.getElementById('summary-overlay').classList.add('visible');
     document.querySelector('#summary-overlay h2').innerText = title;
+    
+    // FIX: Calculate results if missing (e.g. forced finish)
+    if (!state.allSolutions || state.allSolutions.length === 0) {
+        state.allSolutions = solveBoard();
+    }
     
     renderSummaryGrid();
 
@@ -588,9 +604,11 @@ function endGame(title = "Game Over") {
         const isFound = state.foundWordsSet.has(item.word);
         const cssClass = isFound ? 'res-row found' : 'res-row missed';
         const icon = isFound ? '✓' : '';
-        const indicesStr = JSON.stringify(item.indices);
         
-        return `<div class="${cssClass}" onclick='previewWord("${indicesStr}")'>
+        // FIX: Properly escape the JSON string for HTML attribute
+        const indicesStr = JSON.stringify(item.indices).replace(/"/g, "&quot;");
+        
+        return `<div class="${cssClass}" onclick="previewWord('${indicesStr}')">
             <span>${item.word} ${icon}</span>
             <div style="display:flex; align-items:center;">
                 <span class="pts">${item.points}</span>

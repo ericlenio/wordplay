@@ -296,7 +296,7 @@ h2 { margin-top: 0; color: var(--primary); margin-bottom: 15px; }
     display: flex;
     justify-content: center;
     margin-bottom: 10px;
-    flex: 0 0 auto; /* Stop shrinking */
+    flex: 0 0 auto;
 }
 #summary-grid {
     display: grid;
