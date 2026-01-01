@@ -169,6 +169,7 @@ function initGame() {
         state.elapsedTime = 0;
         
         state.isPaused = false;
+        state.isAutoPaused = false;
         state.isPlaying = true;
         state.selectedIndices = [];
 
@@ -594,6 +595,31 @@ function renderSummaryGrid() {
 
 window.previewWord = function(indicesJson) {
     if (navigator.vibrate) navigator.vibrate(20);
+
+// Handle tab switching / minimizing
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        // If playing and NOT already paused manually, pause it
+        if (state.isPlaying && !state.isPaused) {
+            state.isPaused = true;
+            state.isAutoPaused = true;
+            
+            document.getElementById('btn-pause').innerText = "Resume";
+            document.getElementById('grid').style.opacity = 0.1;
+            setMessage("Game Paused");
+        }
+    } else {
+        // If it was paused automatically, resume it
+        if (state.isAutoPaused) {
+            state.isPaused = false;
+            state.isAutoPaused = false;
+            
+            document.getElementById('btn-pause').innerText = "Pause";
+            document.getElementById('grid').style.opacity = 1;
+            setMessage("");
+        }
+    }
+});
 
     let indices;
     if (typeof indicesJson === 'string') {
