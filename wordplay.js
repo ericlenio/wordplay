@@ -594,10 +594,18 @@ function endGame(title = "Game Over") {
     let totalPossibleScore = 0;
     state.allSolutions.forEach(w => totalPossibleScore += w.points);
 
-    document.getElementById('final-score').innerText = state.score;
-    document.getElementById('final-total-score').innerText = totalPossibleScore;
-    document.getElementById('final-found-count').innerText = state.foundWordsSet.size;
-    document.getElementById('final-total-count').innerText = state.totalPossibleWords;
+    // Safely update elements only if they exist
+    if(document.getElementById('final-score')) 
+        document.getElementById('final-score').innerText = state.score;
+    
+    if(document.getElementById('final-total-score')) 
+        document.getElementById('final-total-score').innerText = totalPossibleScore;
+        
+    if(document.getElementById('final-found-count')) 
+        document.getElementById('final-found-count').innerText = state.foundWordsSet.size;
+        
+    if(document.getElementById('final-total-count')) 
+        document.getElementById('final-total-count').innerText = state.totalPossibleWords;
 
     const listContainer = document.getElementById('final-word-list');
     listContainer.innerHTML = state.allSolutions.map(item => {
