@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Wordplay (Haptic Fix)</title>
+    <title>Wordplay (Haptic + Visual)</title>
     <style>
         :root {
             /* Light Theme */
@@ -99,6 +99,13 @@
             border-radius: 8px;
             touch-action: none;
             position: relative;
+            transition: box-shadow 0.2s, background-color 0.2s;
+        }
+
+        /* Success Flash Animation */
+        #grid.success-flash {
+            background-color: var(--found-color) !important;
+            box-shadow: 0 0 20px var(--found-color);
         }
 
         #grid-loader {
@@ -434,6 +441,10 @@
             <div style="margin-top:10px; font-size:0.8rem; opacity: 0.7;">
                 Settings are saved automatically.
             </div>
+            
+            <div style="margin-top:10px;">
+                <button id="btn-test-haptic" class="secondary" style="font-size:0.8rem; width:100%;">Test Vibration</button>
+            </div>
 
             <div style="margin-top:20px; display:flex; gap:10px; justify-content:center;">
                 <button id="btn-cancel-settings" class="secondary">Cancel</button>
@@ -450,8 +461,6 @@
         const GAME_DURATION = 180;
         const GENERATION_BATCH_SIZE = 50;    
         const STORAGE_KEY = "wordplay_config_v1";
-        
-        // HIT TEST SENSITIVITY (0.4 = 40% of the tile from center is active)
         const HIT_RADIUS_PERCENT = 0.4;
 
         const DICE = [
@@ -473,10 +482,7 @@
         if (savedConfig) {
             try {
                 config = JSON.parse(savedConfig);
-                console.log("Loaded saved config:", config);
-            } catch(e) {
-                console.error("Failed to parse saved config", e);
-            }
+            } catch(e) {}
         }
 
         let state = {
@@ -489,7 +495,7 @@
             foundWordsList: [],       
             score: 0,
             totalPossibleWords: 0, 
-            allSolutions: [], // Store all possible words
+            allSolutions: [], 
             timeLeft: GAME_DURATION,
             timerInterval: null,
             isPlaying: false,
@@ -565,11 +571,11 @@
             // Show loader
             loader.style.display = 'flex';
             loaderText.innerText = "Generating Board...";
-            btnStop.style.display = 'block'; // Allow manual stop
+            btnStop.style.display = 'block'; 
             if(!gridEl.contains(loader)) gridEl.appendChild(loader);
 
             document.getElementById('summary-overlay').classList.remove('visible');
-            state.stopGeneration = false; // Reset stop flag
+            state.stopGeneration = false; 
             
             // Start Async Generation
             generateValidBoard((finalGrid) => {
@@ -582,8 +588,7 @@
                     if(!state.hotIndices.includes(r)) state.hotIndices.push(r);
                 }
 
-                // SOLVE THE BOARD IMMEDIATELY
-                state.allSolutions = solveBoard(); // Returns array of {word, points}
+                state.allSolutions = solveBoard(); 
                 state.totalPossibleWords = state.allSolutions.length;
 
                 // Reset Game State
@@ -623,31 +628,27 @@
                     attempts++;
                     const tempGrid = generateGridLetters();
                     
-                    // Temporarily set grid to test solver
                     const prevGrid = state.grid;
                     state.grid = tempGrid;
                     const wordCount = solveBoardCountOnly(); 
-                    state.grid = prevGrid; // Restore
+                    state.grid = prevGrid;
 
-                    // Found valid board (Must satisfy max constraint AND not be 0)
                     if (wordCount > 0 && wordCount <= config.maxWordsOnBoard) {
                         callback(tempGrid); 
                         return; 
                     }
 
-                    // Keep best (valid range preferred, otherwise just smallest > 0)
                     if (wordCount > 0 && wordCount < bestCount) {
                         bestCount = wordCount;
                         bestBoard = tempGrid;
                     }
                 }
 
-                // Update UI and loop
                 loaderText.innerText = `Generating... Attempt ${attempts}\nTarget: <${config.maxWordsOnBoard}\nBest Found: ${bestCount === 9999 ? '0' : bestCount}`;
                 requestAnimationFrame(attemptBatch);
             }
 
-            attemptBatch(); // Start Loop
+            attemptBatch(); 
         }
 
         function renderGrid() {
@@ -666,29 +667,21 @@
                     tile.classList.add('hot');
                 }
 
-                // Change mouseenter to mousemove for better precision tracking
                 tile.addEventListener('mousedown', (e) => startSelection(index, e));
                 tile.addEventListener('mousemove', (e) => handleMove(index, e));
                 gridEl.appendChild(tile);
             });
         }
 
-        // --- HIT TESTING (Diagonal Fix) ---
-        
+        // --- HIT TESTING ---
         function isPointerInActiveZone(e, element) {
             const rect = element.getBoundingClientRect();
-            // Calculate center of tile
             const centerX = rect.left + rect.width / 2;
             const centerY = rect.top + rect.height / 2;
-            
-            // Mouse/Touch Coordinates
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-
-            // Distance Formula
             const dist = Math.sqrt(Math.pow(clientX - centerX, 2) + Math.pow(clientY - centerY, 2));
             const maxDist = Math.min(rect.width, rect.height) * HIT_RADIUS_PERCENT;
-
             return dist <= maxDist;
         }
 
@@ -698,10 +691,7 @@
         function startSelection(index, e) {
             if (!state.isPlaying || state.isPaused) return;
             e.preventDefault();
-            
-            // Only start if clicking relatively near center (less strict than dragging)
             if (!isPointerInActiveZone(e, e.target)) return;
-
             isDragging = true;
             state.selectedIndices = [index];
             updateVisualSelection();
@@ -709,9 +699,6 @@
 
         function handleMove(index, e) {
             if (!isDragging) return;
-            
-            // NEW: Only trigger update if pointer is in the "Active Zone" of the tile
-            // This prevents corners from triggering diagonal neighbors
             if (isPointerInActiveZone(e, e.target)) {
                 updateSelection(index);
             }
@@ -746,7 +733,6 @@
             const touch = e.touches[0];
             const el = document.elementFromPoint(touch.clientX, touch.clientY);
             if (el && el.classList.contains('tile')) {
-                // Check distance on start too
                 if (isPointerInActiveZone(e, el)) {
                     startSelection(parseInt(el.dataset.index), e);
                 }
@@ -758,7 +744,6 @@
             const touch = e.touches[0];
             const el = document.elementFromPoint(touch.clientX, touch.clientY);
             if (el && el.classList.contains('tile')) {
-                // Check distance during move
                 if (isPointerInActiveZone(e, el)) {
                     updateSelection(parseInt(el.dataset.index));
                 }
@@ -779,41 +764,43 @@
         }
 
         function updateVisualSelection() {
-            // Reset styles
             document.querySelectorAll('.tile').forEach(t => {
                 t.classList.remove('selected', 'valid-path', 'found-path');
             });
 
             const word = getSelectedWord();
-            
-            // Check status of current drag
             const isReal = state.dictionarySet.has(word) && word.length >= config.minWordLength;
             const isFound = state.foundWordsSet.has(word);
-
-            // Update Header Text
+            
             const el = document.getElementById('current-word');
             el.innerText = word;
             el.className = ''; 
 
-            if (isFound) {
-                el.classList.add('found');
-            } else if (isReal) {
-                el.classList.add('valid');
-            }
+            if (isFound) el.classList.add('found');
+            else if (isReal) el.classList.add('valid');
 
-            // Apply style to tiles
             state.selectedIndices.forEach(i => {
                 const tile = document.querySelector(`.tile[data-index="${i}"]`);
                 tile.classList.add('selected');
-                
                 if (isReal) {
-                    if (isFound) {
-                        tile.classList.add('found-path');
-                    } else {
-                        tile.classList.add('valid-path');
-                    }
+                    if (isFound) tile.classList.add('found-path');
+                    else tile.classList.add('valid-path');
                 }
             });
+        }
+
+        function triggerFeedback() {
+            // Visual
+            const grid = document.getElementById('grid');
+            grid.classList.add('success-flash');
+            setTimeout(() => grid.classList.remove('success-flash'), 300);
+
+            // Haptic
+            if (navigator.vibrate) {
+                // Clear any previous, do single short tick
+                navigator.vibrate(0);
+                navigator.vibrate(50);
+            }
         }
 
         function submitWord() {
@@ -837,16 +824,9 @@
                 state.foundWordsList.unshift({ word: word, points: points });
                 setMessage("Found: " + word);
                 
-                // --- HAPTIC FEEDBACK ADDITION ---
-                // Pattern: Vibrate 50ms, pause 50ms, vibrate 50ms (Double-tap)
-                // This is sharper and more distinct on Android
-                if (navigator.vibrate) {
-                    navigator.vibrate([50, 50, 50]);
-                }
-
+                triggerFeedback();
                 updateListUI();
 
-                // AUTO END CHECK
                 if (state.foundWordsSet.size === state.totalPossibleWords) {
                     endGame("Congratulations! All words found!");
                 }
@@ -945,7 +925,6 @@
             return false;
         }
 
-        // Optimized solver for count only (during generation)
         function solveBoardCountOnly() {
             let count = 0;
             const found = new Set();
@@ -977,7 +956,6 @@
             return count;
         }
 
-        // Full solver for End Game
         function solveBoard() {
             const allWords = new Set();
             const results = [];
@@ -1021,7 +999,6 @@
             document.getElementById('summary-overlay').classList.add('visible');
             document.querySelector('#summary-overlay h2').innerText = title;
             
-            // We already have state.allSolutions computed at init!
             let totalPossibleScore = 0;
             state.allSolutions.forEach(w => totalPossibleScore += w.points);
 
@@ -1061,7 +1038,6 @@
                 if (!res.ok) throw new Error("Not found");
                 const data = await res.json();
                 
-                // Parse API format (List of meanings)
                 let html = "";
                 if (Array.isArray(data) && data.length > 0) {
                     data[0].meanings.forEach(meaning => {
@@ -1108,6 +1084,11 @@
         document.getElementById('btn-cancel-settings').addEventListener('click', () => {
             optionsModal.classList.remove('visible');
             state.isPaused = false; 
+        });
+        
+        document.getElementById('btn-test-haptic').addEventListener('click', () => {
+            if (navigator.vibrate) navigator.vibrate(50);
+            else alert("Your browser or device does not support vibration.");
         });
 
         // --- Standard Buttons ---
