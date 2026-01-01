@@ -561,7 +561,7 @@ function solveBoard() {
     }
 
     for (let i = 0; i < 16; i++) {
-        dfs(i, state.grid[i]);
+        dfs(i, state.grid[i], [i]);
     }
 
     return results.sort((a, b) => b.word.length - a.word.length || a.word.localeCompare(b.word));
