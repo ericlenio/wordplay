@@ -334,13 +334,14 @@ function updateVisualSelection() {
 }
 
 function triggerFeedback() {
-    // Visual Flash
+    // Visual
     const grid = document.getElementById('grid');
     grid.classList.add('success-flash');
     setTimeout(() => grid.classList.remove('success-flash'), 300);
 
-    // Haptic Pattern: 50ms tick
+    // Haptic
     if (navigator.vibrate) {
+        navigator.vibrate(0);
         navigator.vibrate(50);
     }
 }
@@ -498,6 +499,7 @@ function solveBoardCountOnly() {
     return count;
 }
 
+// Full solver - CAPTURES INDICES for Replay
 function solveBoard() {
     const allWords = new Set();
     const results = [];

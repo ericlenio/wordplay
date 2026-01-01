@@ -18,7 +18,7 @@
     --valid-select: #66bb6a;
     --missed-color: #999;
     --remaining-color: #f57c00;
-    --preview-path: #ff9800; /* Orange for summary path */
+    --preview-path: #ff9800;
 }
 
 /* Dark Theme */
@@ -96,7 +96,6 @@ body {
     transition: box-shadow 0.2s, background-color 0.2s;
 }
 
-/* Success Flash Animation */
 #grid.success-flash {
     background-color: var(--found-color) !important;
     box-shadow: 0 0 20px var(--found-color);
@@ -293,11 +292,11 @@ h2 { margin-top: 0; color: var(--primary); margin-bottom: 15px; }
 /* Summary Specific */
 #summary-stats { margin-bottom: 5px; font-size: 0.9rem; opacity: 0.8; }
 
-/* Summary Grid */
 #summary-grid-container {
     display: flex;
     justify-content: center;
     margin-bottom: 10px;
+    flex: 0 0 auto; /* Stop shrinking */
 }
 #summary-grid {
     display: grid;
@@ -327,8 +326,10 @@ h2 { margin-top: 0; color: var(--primary); margin-bottom: 15px; }
     box-shadow: 0 0 5px rgba(0,0,0,0.3);
 }
 
+/* FIX: Added min-height to ensure list doesn't collapse */
 #final-word-list {
     flex: 1;
+    min-height: 150px; /* Forces visibility even if flex acts up */
     overflow-y: auto;
     text-align: left;
     border: 1px solid var(--list-border);
@@ -336,6 +337,7 @@ h2 { margin-top: 0; color: var(--primary); margin-bottom: 15px; }
     margin: 10px 0;
     font-size: 0.9rem;
 }
+
 .res-row {
     display: flex;
     justify-content: space-between;
