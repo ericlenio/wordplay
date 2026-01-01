@@ -348,6 +348,15 @@ function updateVisualSelection() {
     if (isFound) el.classList.add('found');
     else if (isReal) el.classList.add('valid');
 
+    // Live Feedback in Message Area
+    const msg = document.getElementById('message-area');
+    if (state.selectedIndices.length > 0) {
+        if (isFound) msg.innerText = "Already Found";
+        else if (isReal) msg.innerText = "Valid Word!";
+        else if (word.length >= config.minWordLength) msg.innerText = "Unknown Word";
+        else msg.innerText = "...";
+    }
+
     state.selectedIndices.forEach(i => {
         const tile = document.querySelector(`.tile[data-index="${i}"]`);
         tile.classList.add('selected');
