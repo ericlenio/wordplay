@@ -21,7 +21,7 @@ const FALLBACK_DICT = new Set(["THE", "AND", "FOR", "ARE", "BUT", "NOT", "YOU", 
 let config = {
     minWordLength: 3,
     maxWordsOnBoard: 999,
-    timerMode: 'countdown' // 'countdown' or 'stopwatch'
+    timerMode: 'countdown'
 };
 
 const savedConfig = localStorage.getItem(STORAGE_KEY);
@@ -47,6 +47,7 @@ let state = {
     timerInterval: null,
     isPlaying: false,
     isPaused: false,
+    isAutoPaused: false,
     isDictLoaded: false,
     stopGeneration: false 
 };
@@ -163,8 +164,6 @@ function initGame() {
         state.foundWordsSet.clear();
         state.foundWordsList = [];
         state.score = 0;
-        
-        // Reset Timers based on Mode
         state.timeLeft = GAME_DURATION;
         state.elapsedTime = 0;
         
@@ -350,8 +349,8 @@ function updateVisualSelection() {
     else if (isReal) el.classList.add('valid');
 
     // Live Feedback in Message Area
-    const msg = document.getElementById('message-area');
     if (state.selectedIndices.length > 0) {
+        const msg = document.getElementById('message-area');
         if (isFound) msg.innerText = "Already Found";
         else if (isReal) msg.innerText = "Valid Word!";
         else if (word.length >= config.minWordLength) msg.innerText = "Unknown Word";
@@ -373,7 +372,6 @@ function triggerFeedback() {
     grid.classList.add('success-flash');
     setTimeout(() => grid.classList.remove('success-flash'), 300);
     if (navigator.vibrate) {
-        navigator.vibrate(0);
         navigator.vibrate(50);
     }
 }
@@ -596,31 +594,6 @@ function renderSummaryGrid() {
 window.previewWord = function(indicesJson) {
     if (navigator.vibrate) navigator.vibrate(20);
 
-// Handle tab switching / minimizing
-document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-        // If playing and NOT already paused manually, pause it
-        if (state.isPlaying && !state.isPaused) {
-            state.isPaused = true;
-            state.isAutoPaused = true;
-            
-            document.getElementById('btn-pause').innerText = "Resume";
-            document.getElementById('grid').style.opacity = 0.1;
-            setMessage("Game Paused");
-        }
-    } else {
-        // If it was paused automatically, resume it
-        if (state.isAutoPaused) {
-            state.isPaused = false;
-            state.isAutoPaused = false;
-            
-            document.getElementById('btn-pause').innerText = "Pause";
-            document.getElementById('grid').style.opacity = 1;
-            setMessage("");
-        }
-    }
-});
-
     let indices;
     if (typeof indicesJson === 'string') {
         try {
@@ -755,17 +728,21 @@ document.getElementById('btn-test-haptic').addEventListener('click', () => {
     else alert("Your browser or device does not support vibration.");
 });
 
+// --- Standard Buttons ---
+
 document.getElementById('btn-pause').addEventListener('click', () => {
-    state.isPaused = !state.isPaused;
-    const btn = document.getElementById('btn-pause');
     if (state.isPaused) {
-        btn.innerText = "Resume";
-        document.getElementById('grid').style.opacity = 0.1;
-        setMessage("Game Paused");
-    } else {
-        btn.innerText = "Pause";
+        state.isPaused = false;
+        startTimer(); // Restart loop
+        document.getElementById('btn-pause').innerText = "Pause";
         document.getElementById('grid').style.opacity = 1;
         setMessage("");
+    } else {
+        state.isPaused = true;
+        clearInterval(state.timerInterval); // Stop loop
+        document.getElementById('btn-pause').innerText = "Resume";
+        document.getElementById('grid').style.opacity = 0.1;
+        setMessage("Game Paused");
     }
 });
 
@@ -790,4 +767,30 @@ document.getElementById('btn-restart').addEventListener('click', () => {
     initGame();
 });
 
+// Handle tab switching / minimizing
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        if (state.isPlaying && !state.isPaused) {
+            state.isPaused = true;
+            state.isAutoPaused = true;
+            clearInterval(state.timerInterval); // Hard stop
+            
+            document.getElementById('btn-pause').innerText = "Resume";
+            document.getElementById('grid').style.opacity = 0.1;
+            setMessage("Game Paused");
+        }
+    } else {
+        if (state.isAutoPaused) {
+            state.isPaused = false;
+            state.isAutoPaused = false;
+            startTimer(); // Restart
+            
+            document.getElementById('btn-pause').innerText = "Pause";
+            document.getElementById('grid').style.opacity = 1;
+            setMessage("");
+        }
+    }
+});
+
+// Start loading
 loadDictionary();
