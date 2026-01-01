@@ -5,6 +5,7 @@ const GRID_SIZE = 4;
 const GAME_DURATION = 180;
 const GENERATION_BATCH_SIZE = 50;    
 const STORAGE_KEY = "wordplay_config_v1";
+const DICT_STORAGE_KEY = "wordplay_dictionary_cache"; // New key for dict
 const HIT_RADIUS_PERCENT = 0.4;
 
 const DICE = [
@@ -55,13 +56,8 @@ async function loadDictionary() {
     const msgText = document.getElementById('loader-msg');
     const msgArea = document.getElementById('message-area');
     
-    try {
-        msgText.innerText = "Fetching word list...";
-        msgArea.innerText = "Connecting...";
-        const response = await fetch(DICT_URL);
-        if (!response.ok) throw new Error("Network response was not ok");
-        
-        const text = await response.text();
+    // Helper to process text into game state
+    const processDictionaryText = (text) => {
         state.dictionaryArr = text.toUpperCase().split(/\r?\n/).filter(w => w.length >= 2).sort();
         state.dictionarySet = new Set(state.dictionaryArr);
         state.isDictLoaded = true;
@@ -71,10 +67,44 @@ async function loadDictionary() {
         
         enableControls();
         initGame();
+    };
+
+    // 1. Try Loading from Local Storage Cache first
+    try {
+        const cachedDict = localStorage.getItem(DICT_STORAGE_KEY);
+        if (cachedDict) {
+            msgText.innerText = "Loading from cache...";
+            console.log("Dictionary loaded from local storage cache.");
+            processDictionaryText(cachedDict);
+            return; // Skip fetch if cache hits
+        }
+    } catch (e) {
+        console.warn("Failed to read from local storage:", e);
+    }
+
+    // 2. Fetch from Internet if no cache
+    try {
+        msgText.innerText = "Downloading Dictionary...";
+        msgArea.innerText = "Connecting...";
+        const response = await fetch(DICT_URL);
+        if (!response.ok) throw new Error("Network response was not ok");
+        
+        const text = await response.text();
+        
+        // 3. Save to Cache for next time
+        try {
+            localStorage.setItem(DICT_STORAGE_KEY, text);
+            console.log("Dictionary cached to local storage.");
+        } catch (e) {
+            console.warn("Could not cache dictionary (likely quota exceeded):", e);
+        }
+
+        processDictionaryText(text);
 
     } catch (error) {
         console.error("Dictionary fetch failed:", error);
-        msgArea.innerText = "Offline Mode";
+        msgArea.innerText = "Offline Mode (Limited)";
+        
         const fallbackList = Array.from(FALLBACK_DICT).sort();
         state.dictionaryArr = fallbackList;
         state.dictionarySet = FALLBACK_DICT;
