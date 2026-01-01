@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Wordplay (Bugfix: No Zero Words)</title>
+    <title>Wordplay (Haptic Feedback)</title>
     <style>
         :root {
             /* Light Theme */
@@ -451,6 +451,9 @@
         const GENERATION_BATCH_SIZE = 50;    
         const STORAGE_KEY = "wordplay_config_v1";
         
+        // HIT TEST SENSITIVITY (0.4 = 40% of the tile from center is active)
+        const HIT_RADIUS_PERCENT = 0.4;
+
         const DICE = [
             "AAEEGN", "ABBJOO", "ACHOPS", "AFFKPS",
             "AOOTTW", "CIMOTU", "DEILRX", "DELRVY",
@@ -632,7 +635,7 @@
                         return; 
                     }
 
-                    // Keep best just in case user clicks Stop. Best = valid count closest to desired range (but > 0)
+                    // Keep best (valid range preferred, otherwise just smallest > 0)
                     if (wordCount > 0 && wordCount < bestCount) {
                         bestCount = wordCount;
                         bestBoard = tempGrid;
@@ -663,10 +666,30 @@
                     tile.classList.add('hot');
                 }
 
+                // Change mouseenter to mousemove for better precision tracking
                 tile.addEventListener('mousedown', (e) => startSelection(index, e));
-                tile.addEventListener('mouseenter', () => updateSelection(index));
+                tile.addEventListener('mousemove', (e) => handleMove(index, e));
                 gridEl.appendChild(tile);
             });
+        }
+
+        // --- HIT TESTING (Diagonal Fix) ---
+        
+        function isPointerInActiveZone(e, element) {
+            const rect = element.getBoundingClientRect();
+            // Calculate center of tile
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            
+            // Mouse/Touch Coordinates
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            // Distance Formula
+            const dist = Math.sqrt(Math.pow(clientX - centerX, 2) + Math.pow(clientY - centerY, 2));
+            const maxDist = Math.min(rect.width, rect.height) * HIT_RADIUS_PERCENT;
+
+            return dist <= maxDist;
         }
 
         // --- Interaction Logic ---
@@ -675,9 +698,23 @@
         function startSelection(index, e) {
             if (!state.isPlaying || state.isPaused) return;
             e.preventDefault();
+            
+            // Only start if clicking relatively near center (less strict than dragging)
+            if (!isPointerInActiveZone(e, e.target)) return;
+
             isDragging = true;
             state.selectedIndices = [index];
             updateVisualSelection();
+        }
+
+        function handleMove(index, e) {
+            if (!isDragging) return;
+            
+            // NEW: Only trigger update if pointer is in the "Active Zone" of the tile
+            // This prevents corners from triggering diagonal neighbors
+            if (isPointerInActiveZone(e, e.target)) {
+                updateSelection(index);
+            }
         }
 
         function updateSelection(index) {
@@ -709,7 +746,10 @@
             const touch = e.touches[0];
             const el = document.elementFromPoint(touch.clientX, touch.clientY);
             if (el && el.classList.contains('tile')) {
-                startSelection(parseInt(el.dataset.index), e);
+                // Check distance on start too
+                if (isPointerInActiveZone(e, el)) {
+                    startSelection(parseInt(el.dataset.index), e);
+                }
             }
         }, {passive: false});
 
@@ -718,7 +758,10 @@
             const touch = e.touches[0];
             const el = document.elementFromPoint(touch.clientX, touch.clientY);
             if (el && el.classList.contains('tile')) {
-                updateSelection(parseInt(el.dataset.index));
+                // Check distance during move
+                if (isPointerInActiveZone(e, el)) {
+                    updateSelection(parseInt(el.dataset.index));
+                }
             }
         }, {passive: false});
 
@@ -793,6 +836,12 @@
                 state.score += points;
                 state.foundWordsList.unshift({ word: word, points: points });
                 setMessage("Found: " + word);
+                
+                // Haptic Feedback
+                if (navigator.vibrate) {
+                    navigator.vibrate(200);
+                }
+
                 updateListUI();
 
                 // AUTO END CHECK
