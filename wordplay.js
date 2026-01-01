@@ -334,14 +334,13 @@ function updateVisualSelection() {
 }
 
 function triggerFeedback() {
-    // Visual
+    // Visual Flash
     const grid = document.getElementById('grid');
     grid.classList.add('success-flash');
     setTimeout(() => grid.classList.remove('success-flash'), 300);
 
-    // Haptic
+    // Haptic Pattern: 50ms tick
     if (navigator.vibrate) {
-        navigator.vibrate(0);
         navigator.vibrate(50);
     }
 }
@@ -512,7 +511,8 @@ function solveBoard() {
                 allWords.add(currentWord);
                 results.push({
                     word: currentWord,
-                    points: getWordPoints(currentWord, pathIndices)
+                    points: getWordPoints(currentWord, pathIndices),
+                    indices: pathIndices
                 });
             }
         }
@@ -536,12 +536,43 @@ function solveBoard() {
 
 // --- Game Flow ---
 
+function renderSummaryGrid() {
+    const sumGrid = document.getElementById('summary-grid');
+    sumGrid.innerHTML = '';
+    
+    state.grid.forEach((letter, index) => {
+        const tile = document.createElement('div');
+        tile.className = 'sum-tile';
+        tile.id = `sum-tile-${index}`; 
+        tile.innerText = letter === 'QU' ? 'Qu' : letter;
+        if (state.hotIndices.includes(index)) {
+            tile.classList.add('hot');
+        }
+        sumGrid.appendChild(tile);
+    });
+}
+
+window.previewWord = function(indicesJson) {
+    if (navigator.vibrate) navigator.vibrate(20);
+
+    const indices = JSON.parse(indicesJson);
+    
+    document.querySelectorAll('.sum-tile').forEach(t => t.classList.remove('preview-path'));
+    
+    indices.forEach(idx => {
+        const tile = document.getElementById(`sum-tile-${idx}`);
+        if(tile) tile.classList.add('preview-path');
+    });
+};
+
 function endGame(title = "Game Over") {
     clearInterval(state.timerInterval);
     state.isPlaying = false;
     document.getElementById('summary-overlay').classList.add('visible');
     document.querySelector('#summary-overlay h2').innerText = title;
     
+    renderSummaryGrid();
+
     let totalPossibleScore = 0;
     state.allSolutions.forEach(w => totalPossibleScore += w.points);
 
@@ -555,11 +586,13 @@ function endGame(title = "Game Over") {
         const isFound = state.foundWordsSet.has(item.word);
         const cssClass = isFound ? 'res-row found' : 'res-row missed';
         const icon = isFound ? '✓' : '';
-        return `<div class="${cssClass}">
+        const indicesStr = JSON.stringify(item.indices);
+        
+        return `<div class="${cssClass}" onclick='previewWord("${indicesStr}")'>
             <span>${item.word} ${icon}</span>
             <div style="display:flex; align-items:center;">
                 <span class="pts">${item.points}</span>
-                <button class="def-btn" onclick="showDefinition('${item.word}')">📖</button>
+                <button class="def-btn" onclick="event.stopPropagation(); showDefinition('${item.word}')">📖</button>
             </div>
         </div>`;
     }).join('');

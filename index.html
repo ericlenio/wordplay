@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Wordplay</title>
-    
     <link rel="stylesheet" href="wordplay.css">
 </head>
 <body>
@@ -54,9 +53,14 @@
         <div class="modal">
             <h2>Game Over</h2>
             <div id="summary-stats">
-                Found <b id="final-found-count">0</b> out of <b id="final-total-count">0</b>.<br>
                 Score: <b id="final-score" style="color:var(--found-color)">0</b> / <span id="final-total-score">0</span>
             </div>
+            
+            <div id="summary-grid-container">
+                <div id="summary-grid"></div>
+            </div>
+            <div style="font-size:0.7rem; opacity:0.7; margin-bottom: 5px;">Tap a word to see its path</div>
+
             <div id="final-word-list">
                 <div style="text-align:center; padding:10px;">Generating results...</div>
             </div>
