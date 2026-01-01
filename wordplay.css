@@ -273,6 +273,7 @@ button.secondary { background: #78909c; }
 
 .overlay.visible { visibility: visible; opacity: 1; }
 
+/* FIX: Modal Flex Layout to prevent button cutoff */
 .modal {
     background: var(--list-bg);
     color: var(--text-color);
@@ -281,22 +282,28 @@ button.secondary { background: #78909c; }
     text-align: center;
     width: 90%;
     max-width: 350px;
-    max-height: 90vh;
+    max-height: 80vh; /* Reduced max-height to ensure it fits mobile viewports with bars */
     display: flex;
-    flex-direction: column;
+    flex-direction: column; /* Force column layout */
     border: 1px solid var(--list-border);
+    overflow: hidden; /* Prevent the modal box itself from scrolling */
 }
 
 h2 { margin-top: 0; color: var(--primary); margin-bottom: 15px; }
 
 /* Summary Specific */
-#summary-stats { margin-bottom: 5px; font-size: 0.9rem; opacity: 0.8; }
+#summary-stats { 
+    margin-bottom: 5px; 
+    font-size: 0.9rem; 
+    opacity: 0.8;
+    flex: 0 0 auto; /* Don't shrink */
+}
 
 #summary-grid-container {
     display: flex;
     justify-content: center;
     margin-bottom: 10px;
-    flex: 0 0 auto;
+    flex: 0 0 auto; /* Don't shrink */
 }
 #summary-grid {
     display: grid;
@@ -326,16 +333,16 @@ h2 { margin-top: 0; color: var(--primary); margin-bottom: 15px; }
     box-shadow: 0 0 5px rgba(0,0,0,0.3);
 }
 
-/* FIX: Added min-height to ensure list doesn't collapse */
+/* FIX: Flexible List Height */
 #final-word-list {
-    flex: 1;
-    min-height: 150px; /* Forces visibility even if flex acts up */
-    overflow-y: auto;
+    flex: 1 1 auto; /* Allow shrink and grow */
+    overflow-y: auto; /* Scroll internally */
     text-align: left;
     border: 1px solid var(--list-border);
     padding: 5px;
     margin: 10px 0;
     font-size: 0.9rem;
+    min-height: 50px; /* Small min-height to allow compression on small screens */
 }
 
 .res-row {
@@ -350,6 +357,12 @@ h2 { margin-top: 0; color: var(--primary); margin-bottom: 15px; }
 .res-row.missed { color: var(--missed-color); }
 .res-row.found { color: var(--found-color); font-weight: bold; }
 .res-row.missed .pts { font-weight: normal; opacity: 0.5; }
+
+/* Button sticky at bottom of flex container */
+#btn-restart {
+    flex: 0 0 auto;
+    margin-top: 5px;
+}
 
 .def-btn {
     background: none;
