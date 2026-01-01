@@ -245,17 +245,27 @@ button.secondary { background: #78909c; }
     font-weight: bold;
 }
 
-.word-row {
+/* Updated Layout: Left-to-Right Wrapped Pills */
+#found-words-list {
     display: flex;
-    justify-content: space-between;
-    padding: 8px 0;
-    border-bottom: 1px solid var(--list-border);
-    font-size: 1rem;
-    animation: slideIn 0.3s ease-out;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding-bottom: 10px;
 }
 
-.word-row:first-child { font-weight: bold; color: var(--text-color); }
-.word-points { color: var(--found-color); font-weight: bold; }
+.word-row {
+    display: inline-flex;
+    align-items: center;
+    width: auto;
+    padding: 4px 8px;
+    border: 1px solid var(--list-border);
+    border-radius: 12px;
+    background: rgba(0,0,0,0.03);
+    font-size: 0.85rem;
+    animation: slideIn 0.3s ease-out;
+}
+.word-row:first-child { font-weight: normal; }
+.word-points { color: var(--found-color); font-weight: bold; margin-left: 5px; font-size: 0.8em; }
 
 @keyframes slideIn {
     from { opacity: 0; transform: translateY(-10px); }

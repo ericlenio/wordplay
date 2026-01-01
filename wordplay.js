@@ -1,4 +1,4 @@
-const VERSION = "1.0.2";
+const VERSION = "1.0.3";
 // --- Configuration ---
 const DICT_URL = "https://raw.githubusercontent.com/jesstess/Scrabble/master/scrabble/sowpods.txt";
 const DEF_API_URL = "https://api.dictionaryapi.dev/api/v2/entries/en/";
@@ -465,10 +465,12 @@ function updateUI() {
 
 function updateListUI() {
     const listEl = document.getElementById('found-words-list');
-    listEl.innerHTML = state.foundWordsList.map(item => 
+    // Sort words alphabetically (A-Z)
+    const sortedList = [...state.foundWordsList].sort((a, b) => a.word.localeCompare(b.word));
+    listEl.innerHTML = sortedList.map(item => 
         `<div class="word-row">
             <span>${item.word}</span>
-            <span class="word-points">+${item.points}</span>
+            <span class="word-points">${item.points}</span>
         </div>`
     ).join('');
 }
