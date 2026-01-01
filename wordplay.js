@@ -5,7 +5,7 @@ const GRID_SIZE = 4;
 const GAME_DURATION = 180;
 const GENERATION_BATCH_SIZE = 50;    
 const STORAGE_KEY = "wordplay_config_v1";
-const DICT_STORAGE_KEY = "wordplay_dictionary_cache"; // New key for dict
+const DICT_STORAGE_KEY = "wordplay_dictionary_cache";
 const HIT_RADIUS_PERCENT = 0.4;
 
 const DICE = [
@@ -20,13 +20,14 @@ const FALLBACK_DICT = new Set(["THE", "AND", "FOR", "ARE", "BUT", "NOT", "YOU", 
 // Load Config from Local Storage
 let config = {
     minWordLength: 3,
-    maxWordsOnBoard: 999 
+    maxWordsOnBoard: 999,
+    timerMode: 'countdown' // 'countdown' or 'stopwatch'
 };
 
 const savedConfig = localStorage.getItem(STORAGE_KEY);
 if (savedConfig) {
     try {
-        config = JSON.parse(savedConfig);
+        config = { ...config, ...JSON.parse(savedConfig) };
     } catch(e) {}
 }
 
@@ -42,6 +43,7 @@ let state = {
     totalPossibleWords: 0, 
     allSolutions: [], 
     timeLeft: GAME_DURATION,
+    elapsedTime: 0,
     timerInterval: null,
     isPlaying: false,
     isPaused: false,
@@ -56,7 +58,6 @@ async function loadDictionary() {
     const msgText = document.getElementById('loader-msg');
     const msgArea = document.getElementById('message-area');
     
-    // Helper to process text into game state
     const processDictionaryText = (text) => {
         state.dictionaryArr = text.toUpperCase().split(/\r?\n/).filter(w => w.length >= 2).sort();
         state.dictionarySet = new Set(state.dictionaryArr);
@@ -69,20 +70,18 @@ async function loadDictionary() {
         initGame();
     };
 
-    // 1. Try Loading from Local Storage Cache first
     try {
         const cachedDict = localStorage.getItem(DICT_STORAGE_KEY);
         if (cachedDict) {
             msgText.innerText = "Loading from cache...";
             console.log("Dictionary loaded from local storage cache.");
             processDictionaryText(cachedDict);
-            return; // Skip fetch if cache hits
+            return;
         }
     } catch (e) {
         console.warn("Failed to read from local storage:", e);
     }
 
-    // 2. Fetch from Internet if no cache
     try {
         msgText.innerText = "Downloading Dictionary...";
         msgArea.innerText = "Connecting...";
@@ -91,7 +90,6 @@ async function loadDictionary() {
         
         const text = await response.text();
         
-        // 3. Save to Cache for next time
         try {
             localStorage.setItem(DICT_STORAGE_KEY, text);
             console.log("Dictionary cached to local storage.");
@@ -142,7 +140,6 @@ function initGame() {
     const btnStop = document.getElementById('btn-stop-gen');
     const gridEl = document.getElementById('grid');
     
-    // Show loader
     loader.style.display = 'flex';
     loaderText.innerText = "Generating Board...";
     btnStop.style.display = 'block'; 
@@ -151,11 +148,9 @@ function initGame() {
     document.getElementById('summary-overlay').classList.remove('visible');
     state.stopGeneration = false; 
     
-    // Start Async Generation
     generateValidBoard((finalGrid) => {
         state.grid = finalGrid;
         
-        // Initialize Hot Blocks
         state.hotIndices = [];
         while(state.hotIndices.length < 3) {
             let r = Math.floor(Math.random() * 16);
@@ -165,11 +160,14 @@ function initGame() {
         state.allSolutions = solveBoard(); 
         state.totalPossibleWords = state.allSolutions.length;
 
-        // Reset Game State
         state.foundWordsSet.clear();
         state.foundWordsList = [];
         state.score = 0;
+        
+        // Reset Timers based on Mode
         state.timeLeft = GAME_DURATION;
+        state.elapsedTime = 0;
+        
         state.isPaused = false;
         state.isPlaying = true;
         state.selectedIndices = [];
@@ -184,7 +182,6 @@ function initGame() {
     });
 }
 
-// Async Board Generator (Unlimited Attempts)
 function generateValidBoard(callback) {
     let attempts = 0;
     let bestBoard = [];
@@ -247,7 +244,6 @@ function renderGrid() {
     });
 }
 
-// --- HIT TESTING ---
 function isPointerInActiveZone(e, element) {
     const rect = element.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
@@ -259,7 +255,6 @@ function isPointerInActiveZone(e, element) {
     return dist <= maxDist;
 }
 
-// --- Interaction Logic ---
 let isDragging = false;
 
 function startSelection(index, e) {
@@ -364,12 +359,9 @@ function updateVisualSelection() {
 }
 
 function triggerFeedback() {
-    // Visual
     const grid = document.getElementById('grid');
     grid.classList.add('success-flash');
     setTimeout(() => grid.classList.remove('success-flash'), 300);
-
-    // Haptic
     if (navigator.vibrate) {
         navigator.vibrate(0);
         navigator.vibrate(50);
@@ -439,9 +431,17 @@ function updateUI() {
     const remaining = state.totalPossibleWords - state.foundWordsSet.size;
     document.getElementById('word-remaining').innerText = remaining;
     
-    const m = Math.floor(state.timeLeft / 60);
-    const s = state.timeLeft % 60;
-    document.getElementById('timer').innerText = `${m}:${s.toString().padStart(2, '0')}`;
+    let timeDisplay = "";
+    if (config.timerMode === 'countdown') {
+        const m = Math.floor(state.timeLeft / 60);
+        const s = state.timeLeft % 60;
+        timeDisplay = `${m}:${s.toString().padStart(2, '0')}`;
+    } else {
+        const m = Math.floor(state.elapsedTime / 60);
+        const s = state.elapsedTime % 60;
+        timeDisplay = `${m}:${s.toString().padStart(2, '0')}`;
+    }
+    document.getElementById('timer').innerText = timeDisplay;
 }
 
 function updateListUI() {
@@ -458,14 +458,16 @@ function startTimer() {
     if (state.timerInterval) clearInterval(state.timerInterval);
     state.timerInterval = setInterval(() => {
         if (!state.isPaused) {
-            state.timeLeft--;
+            if (config.timerMode === 'countdown') {
+                state.timeLeft--;
+                if (state.timeLeft <= 0) endGame("Time's Up!");
+            } else {
+                state.elapsedTime++;
+            }
             updateUI();
-            if (state.timeLeft <= 0) endGame("Time's Up!");
         }
     }, 1000);
 }
-
-// --- SOLVER LOGIC ---
 
 function getNeighbors(idx) {
     const neighbors = [];
@@ -529,7 +531,6 @@ function solveBoardCountOnly() {
     return count;
 }
 
-// Full solver - CAPTURES INDICES for Replay
 function solveBoard() {
     const allWords = new Set();
     const results = [];
@@ -560,13 +561,11 @@ function solveBoard() {
     }
 
     for (let i = 0; i < 16; i++) {
-        dfs(i, state.grid[i], [i]);
+        dfs(i, state.grid[i]);
     }
 
     return results.sort((a, b) => b.word.length - a.word.length || a.word.localeCompare(b.word));
 }
-
-// --- Game Flow ---
 
 function renderSummaryGrid() {
     const sumGrid = document.getElementById('summary-grid');
@@ -587,7 +586,6 @@ function renderSummaryGrid() {
 window.previewWord = function(indicesJson) {
     if (navigator.vibrate) navigator.vibrate(20);
 
-    // FIX: indicesJson is already a string here
     let indices;
     if (typeof indicesJson === 'string') {
         try {
@@ -614,7 +612,6 @@ function endGame(title = "Game Over") {
     document.getElementById('summary-overlay').classList.add('visible');
     document.querySelector('#summary-overlay h2').innerText = title;
     
-    // FIX: Calculate results if missing (e.g. forced finish)
     if (!state.allSolutions || state.allSolutions.length === 0) {
         state.allSolutions = solveBoard();
     }
@@ -624,7 +621,6 @@ function endGame(title = "Game Over") {
     let totalPossibleScore = 0;
     state.allSolutions.forEach(w => totalPossibleScore += w.points);
 
-    // Safely update elements only if they exist
     if(document.getElementById('final-score')) 
         document.getElementById('final-score').innerText = state.score;
     
@@ -643,7 +639,6 @@ function endGame(title = "Game Over") {
         const cssClass = isFound ? 'res-row found' : 'res-row missed';
         const icon = isFound ? '✓' : '';
         
-        // FIX: Properly escape the JSON string for HTML attribute
         const indicesStr = JSON.stringify(item.indices).replace(/"/g, "&quot;");
         
         return `<div class="${cssClass}" onclick="previewWord('${indicesStr}')">
@@ -655,8 +650,6 @@ function endGame(title = "Game Over") {
         </div>`;
     }).join('');
 }
-
-// --- Definition Logic ---
 
 window.showDefinition = async function(word) {
     const modal = document.getElementById('def-overlay');
@@ -689,25 +682,27 @@ window.showDefinition = async function(word) {
     }
 };
 
-// --- Options Modal Logic ---
-
 const optionsModal = document.getElementById('settings-overlay');
 const minLenInput = document.getElementById('setting-min-len');
 const maxWordsInput = document.getElementById('setting-max-words');
+const timerModeInput = document.getElementById('setting-timer-mode');
 
 document.getElementById('btn-options').addEventListener('click', () => {
     state.isPaused = true; 
     minLenInput.value = config.minWordLength;
     maxWordsInput.value = config.maxWordsOnBoard;
+    timerModeInput.value = config.timerMode || 'countdown';
     optionsModal.classList.add('visible');
 });
 
 document.getElementById('btn-save-settings').addEventListener('click', () => {
     const newMin = parseInt(minLenInput.value);
     const newMax = parseInt(maxWordsInput.value);
+    const newMode = timerModeInput.value;
 
     if(newMin >= 2 && newMin <= 8) config.minWordLength = newMin;
     if(newMax >= 1) config.maxWordsOnBoard = newMax;
+    config.timerMode = newMode;
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
 
@@ -724,8 +719,6 @@ document.getElementById('btn-test-haptic').addEventListener('click', () => {
     if (navigator.vibrate) navigator.vibrate(50);
     else alert("Your browser or device does not support vibration.");
 });
-
-// --- Standard Buttons ---
 
 document.getElementById('btn-pause').addEventListener('click', () => {
     state.isPaused = !state.isPaused;
@@ -762,5 +755,4 @@ document.getElementById('btn-restart').addEventListener('click', () => {
     initGame();
 });
 
-// Start loading
 loadDictionary();
