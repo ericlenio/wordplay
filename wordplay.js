@@ -1,4 +1,4 @@
-const VERSION = "1.0.5";
+const VERSION = "1.0.6";
 // --- Configuration ---
 const DICT_URL = "https://raw.githubusercontent.com/jesstess/Scrabble/master/scrabble/sowpods.txt";
 const DEF_API_URL = "https://api.dictionaryapi.dev/api/v2/entries/en/";
@@ -848,17 +848,19 @@ function restoreGame() {
         state.foundWordsSet = new Set(state.foundWordsList.map(item => item.word));
         
         state.isPlaying = true;
-        state.isPaused = true; 
+        state.isPaused = false; 
         state.selectedIndices = [];
         state.allSolutions = solveBoard();
         state.totalPossibleWords = state.allSolutions.length;
 
+        document.getElementById('summary-overlay').classList.remove('visible');
         updateUI();
         updateListUI();
         renderGrid();
+        startTimer();
         
-        document.getElementById('btn-pause').innerText = "Resume";
-        document.getElementById('grid').style.opacity = 0.1;
+        document.getElementById('btn-pause').innerText = "Pause";
+        document.getElementById('grid').style.opacity = 1;
         setMessage("Game Restored");
         
         return true;
