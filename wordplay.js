@@ -1,4 +1,4 @@
-const VERSION = "1.0.3";
+const VERSION = "1.0.4";
 // --- Configuration ---
 const DICT_URL = "https://raw.githubusercontent.com/jesstess/Scrabble/master/scrabble/sowpods.txt";
 const DEF_API_URL = "https://api.dictionaryapi.dev/api/v2/entries/en/";
@@ -7,6 +7,7 @@ const GAME_DURATION = 180;
 const GENERATION_BATCH_SIZE = 50;    
 const STORAGE_KEY = "wordplay_config_v1";
 const DICT_STORAGE_KEY = "wordplay_dictionary_cache";
+const GAME_SAVE_KEY = "wordplay_save_v1";
 const HIT_RADIUS_PERCENT = 0.4;
 
 const DICE = [
@@ -69,7 +70,7 @@ async function loadDictionary() {
         loader.style.display = 'none';
         
         enableControls();
-        initGame();
+        if (!restoreGame()) initGame();
     };
 
     try {
@@ -112,7 +113,7 @@ async function loadDictionary() {
         loader.style.display = 'none';
         
         enableControls();
-        initGame();
+        if (!restoreGame()) initGame();
     }
 }
 
@@ -135,6 +136,7 @@ function generateGridLetters() {
 }
 
 function initGame() {
+    localStorage.removeItem(GAME_SAVE_KEY);
     if (!state.isDictLoaded) return;
 
     // Display Version Watermark
@@ -407,6 +409,7 @@ function submitWord() {
         state.score += points;
         state.foundWordsList.unshift({ word: word, points: points });
         setMessage("Found: " + word);
+        saveGameState();
         
         triggerFeedback();
         updateListUI();
@@ -629,6 +632,7 @@ window.previewWord = function(indicesJson) {
 
 function endGame(title = "Game Over") {
     clearInterval(state.timerInterval);
+    localStorage.removeItem(GAME_SAVE_KEY);
     state.isPlaying = false;
     document.getElementById('summary-overlay').classList.add('visible');
     document.querySelector('#summary-overlay h2').innerText = title;
@@ -757,6 +761,7 @@ document.getElementById('btn-pause').addEventListener('click', () => {
         document.getElementById('grid').style.opacity = 0.1;
         setMessage("Game Paused");
     }
+    saveGameState();
 });
 
 document.getElementById('btn-stop-gen').addEventListener('click', () => {
@@ -807,3 +812,5 @@ document.addEventListener('visibilitychange', () => {
 
 // Start loading
 loadDictionary();
+// --- END OF FILE ---
+// ANCHOR
