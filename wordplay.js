@@ -1,4 +1,4 @@
-const VERSION = "1.0.4";
+const VERSION = "1.0.5";
 // --- Configuration ---
 const DICT_URL = "https://raw.githubusercontent.com/jesstess/Scrabble/master/scrabble/sowpods.txt";
 const DEF_API_URL = "https://api.dictionaryapi.dev/api/v2/entries/en/";
@@ -812,5 +812,57 @@ document.addEventListener('visibilitychange', () => {
 
 // Start loading
 loadDictionary();
+// --- Save/Restore Logic ---
+
+window.addEventListener("pagehide", saveGameState);
+
+function saveGameState() {
+    if (!state.isPlaying && state.foundWordsList.length === 0) return;
+    
+    const data = {
+        grid: state.grid,
+        hotIndices: state.hotIndices,
+        foundWords: state.foundWordsList,
+        score: state.score,
+        timeLeft: state.timeLeft,
+        elapsedTime: state.elapsedTime,
+        config: config
+    };
+    localStorage.setItem(GAME_SAVE_KEY, JSON.stringify(data));
+}
+
+function restoreGame() {
+    const json = localStorage.getItem(GAME_SAVE_KEY);
+    if (!json) return false;
+
+    try {
+        const data = JSON.parse(json);
+        if (data.config && data.config.minWordLength !== config.minWordLength) return false;
+
+        state.grid = data.grid;
+        state.hotIndices = data.hotIndices;
+        state.score = data.score;
+        state.timeLeft = data.timeLeft || GAME_DURATION;
+        state.elapsedTime = data.elapsedTime || 0;
+        state.foundWordsList = data.foundWords || [];
+        state.foundWordsSet = new Set(state.foundWordsList.map(item => item.word));
+        
+        state.isPlaying = true;
+        state.isPaused = true; 
+        state.selectedIndices = [];
+        state.allSolutions = solveBoard();
+        state.totalPossibleWords = state.allSolutions.length;
+
+        updateUI();
+        updateListUI();
+        renderGrid();
+        
+        document.getElementById('btn-pause').innerText = "Resume";
+        document.getElementById('grid').style.opacity = 0.1;
+        setMessage("Game Restored");
+        
+        return true;
+    } catch (e) { return false; }
+}
 // --- END OF FILE ---
 // ANCHOR
