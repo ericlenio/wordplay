@@ -1,4 +1,4 @@
-const VERSION = "1.0.7";
+const VERSION = "1.0.8";
 // --- Configuration ---
 const DICT_URL = "https://raw.githubusercontent.com/jesstess/Scrabble/master/scrabble/sowpods.txt";
 const DEF_API_URL = "https://api.dictionaryapi.dev/api/v2/entries/en/";
@@ -21,9 +21,9 @@ const FALLBACK_DICT = new Set(["THE", "AND", "FOR", "ARE", "BUT", "NOT", "YOU", 
 
 // Load Config from Local Storage
 let config = {
-    minWordLength: 3,
-    maxWordsOnBoard: 999,
-    timerMode: 'countdown'
+    minWordLength: 4,
+    maxWordsOnBoard: 12,
+    timerMode: 'stopwatch'
 };
 
 const savedConfig = localStorage.getItem(STORAGE_KEY);
