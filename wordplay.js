@@ -1,4 +1,4 @@
-const VERSION = "1.0.8";
+const VERSION = "1.0.9";
 // --- Configuration ---
 const DICT_URL = "https://raw.githubusercontent.com/jesstess/Scrabble/master/scrabble/sowpods.txt";
 const DEF_API_URL = "https://api.dictionaryapi.dev/api/v2/entries/en/";
@@ -743,6 +743,15 @@ document.getElementById('btn-cancel-settings').addEventListener('click', () => {
 document.getElementById('btn-test-haptic').addEventListener('click', () => {
     if (navigator.vibrate) navigator.vibrate(50);
     else alert("Your browser or device does not support vibration.");
+});
+
+document.getElementById('btn-reset-storage').addEventListener('click', () => {
+    if (confirm("Are you sure you want to reset ALL game data? This is irreversible and will reload the page.")) {
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(DICT_STORAGE_KEY);
+        localStorage.removeItem(GAME_SAVE_KEY);
+        location.reload();
+    }
 });
 
 // --- Standard Buttons ---

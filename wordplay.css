@@ -224,6 +224,11 @@ button.secondary { background: #78909c; }
 #btn-finish:active { background: #e65100; }
 #btn-options { background: #546e7a; }
 
+button.danger {
+    background: #f44336;
+}
+button.danger:active:not(:disabled) { background: #d32f2f; }
+
 /* Found Words List */
 #list-container {
     flex: 1;
