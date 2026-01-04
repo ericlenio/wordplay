@@ -1,4 +1,4 @@
-const VERSION = "1.0.9";
+const VERSION = "1.0.11";
 // --- Configuration ---
 const DICT_URL = "https://raw.githubusercontent.com/jesstess/Scrabble/master/scrabble/sowpods.txt";
 const DEF_API_URL = "https://api.dictionaryapi.dev/api/v2/entries/en/";
@@ -23,7 +23,8 @@ const FALLBACK_DICT = new Set(["THE", "AND", "FOR", "ARE", "BUT", "NOT", "YOU", 
 let config = {
     minWordLength: 4,
     maxWordsOnBoard: 12,
-    timerMode: 'stopwatch'
+    timerMode: 'stopwatch',
+    hapticsEnabled: true,
 };
 
 const savedConfig = localStorage.getItem(STORAGE_KEY);
@@ -77,7 +78,7 @@ async function loadDictionary() {
         const cachedDict = localStorage.getItem(DICT_STORAGE_KEY);
         if (cachedDict) {
             msgText.innerText = "Loading from cache...";
-            console.log("Dictionary loaded from local storage cache.");
+            console.warn("Dictionary loaded from local storage cache.");
             processDictionaryText(cachedDict);
             return;
         }
@@ -384,7 +385,7 @@ function triggerFeedback() {
     const grid = document.getElementById('grid');
     grid.classList.add('success-flash');
     setTimeout(() => grid.classList.remove('success-flash'), 300);
-    if (navigator.vibrate) {
+    if (config.hapticsEnabled && navigator.vibrate) {
         navigator.vibrate(50);
     }
 }
@@ -608,7 +609,7 @@ function renderSummaryGrid() {
 }
 
 window.previewWord = function(indicesJson) {
-    if (navigator.vibrate) navigator.vibrate(20);
+    if (config.hapticsEnabled && navigator.vibrate) navigator.vibrate(20);
 
     let indices;
     if (typeof indicesJson === 'string') {
@@ -711,12 +712,14 @@ const optionsModal = document.getElementById('settings-overlay');
 const minLenInput = document.getElementById('setting-min-len');
 const maxWordsInput = document.getElementById('setting-max-words');
 const timerModeInput = document.getElementById('setting-timer-mode');
+const hapticsInput = document.getElementById('setting-haptics');
 
 document.getElementById('btn-options').addEventListener('click', () => {
     state.isPaused = true; 
     minLenInput.value = config.minWordLength;
     maxWordsInput.value = config.maxWordsOnBoard;
     timerModeInput.value = config.timerMode || 'countdown';
+    hapticsInput.checked = config.hapticsEnabled;
     optionsModal.classList.add('visible');
 });
 
@@ -724,10 +727,12 @@ document.getElementById('btn-save-settings').addEventListener('click', () => {
     const newMin = parseInt(minLenInput.value);
     const newMax = parseInt(maxWordsInput.value);
     const newMode = timerModeInput.value;
+    const newHaptics = hapticsInput.checked;
 
     if(newMin >= 2 && newMin <= 8) config.minWordLength = newMin;
     if(newMax >= 1) config.maxWordsOnBoard = newMax;
     config.timerMode = newMode;
+    config.hapticsEnabled = newHaptics;
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
 
@@ -741,8 +746,9 @@ document.getElementById('btn-cancel-settings').addEventListener('click', () => {
 });
 
 document.getElementById('btn-test-haptic').addEventListener('click', () => {
-    if (navigator.vibrate) navigator.vibrate(50);
-    else alert("Your browser or device does not support vibration.");
+    if (config.hapticsEnabled && navigator.vibrate) navigator.vibrate(50);
+    else if (!config.hapticsEnabled) console.warn("Haptics are disabled in settings.");
+    else console.warn("Your browser or device does not support vibration.");
 });
 
 document.getElementById('btn-reset-storage').addEventListener('click', () => {
@@ -845,8 +851,12 @@ function restoreGame() {
     if (!json) return false;
 
     try {
-        const data = JSON.parse(json);
-        if (data.config && data.config.minWordLength !== config.minWordLength) return false;
+        let data = JSON.parse(json);
+        
+        if (data.config) {
+            config = { ...config, ...data.config };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+        }
 
         state.grid = data.grid;
         state.hotIndices = data.hotIndices;
