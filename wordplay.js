@@ -1,4 +1,4 @@
-const VERSION = "1.0.12";
+const VERSION = "1.0.13";
 // --- Configuration ---
 const DICT_URL = "https://raw.githubusercontent.com/jesstess/Scrabble/master/scrabble/sowpods.txt";
 const DEF_API_URL = "https://api.dictionaryapi.dev/api/v2/entries/en/";

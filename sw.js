@@ -1,10 +1,11 @@
 const cacheName = 'wordplay-v1';
 const assetsToCache = [
-  '/',
-  '/index.html',
-  '/wordplay.css',
-  '/wordplay.js',
-  '/gemini/icon.svg'
+  './',
+  './index.html',
+  './wordplay.css',
+  './wordplay.js',
+  './manifest.json',
+  './gemini/icon.svg'
 ];
 
 // Install event: cache the assets
