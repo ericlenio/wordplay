@@ -487,3 +487,38 @@ input:checked + .slider:before {
 .slider.round:before {
   border-radius: 50%;
 }
+
+/* Update Toast */
+#update-toast {
+    position: fixed;
+    bottom: -100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px 8px 0 0;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: bottom 0.5s ease-in-out;
+    z-index: 200;
+}
+
+#update-toast.visible {
+    bottom: 0;
+}
+
+#update-toast button {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+}
+
+#update-toast #btn-refresh {
+    background-color: var(--primary);
+}
+
+#update-toast #btn-dismiss {
+    background-color: #777;
+}

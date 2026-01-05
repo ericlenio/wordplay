@@ -1,4 +1,4 @@
-const VERSION = "1.0.16";
+const VERSION = "1.0.18";
 // --- Configuration ---
 const DICT_URL = "https://raw.githubusercontent.com/jesstess/Scrabble/master/scrabble/sowpods.txt";
 const DEF_API_URL = "https://api.dictionaryapi.dev/api/v2/entries/en/";
@@ -52,11 +52,82 @@ let state = {
     isPaused: false,
     isAutoPaused: false,
     isDictLoaded: false,
-    stopGeneration: false 
+    stopGeneration: false,
+    newSW: null
 };
 
-// --- Dictionary Loading ---
+// --- Service Worker & Update Logic ---
+function registerServiceWorker() {
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => {
+                    console.log('Service Worker registered.');
+                    reg.addEventListener('updatefound', () => {
+                        state.newSW = reg.installing;
+                        state.newSW.addEventListener('statechange', () => {
+                            if (state.newSW.state === 'installed') {
+                                if (navigator.serviceWorker.controller) {
+                                    showUpdateToast();
+                                }
+                            }
+                        });
+                    });
+                })
+                .catch(err => console.log('Service Worker registration failed: ', err));
+        });
+    }
+}
 
+function showUpdateToast() {
+    let toast = document.getElementById('update-toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'update-toast';
+        toast.innerHTML = `
+            <span>A new version is available!</span>
+            <button id="btn-refresh">Reload</button>
+            <button id="btn-dismiss">Later</button>
+        `;
+        document.body.appendChild(toast);
+
+        document.getElementById('btn-refresh').addEventListener('click', () => {
+            state.newSW.postMessage({ type: 'SKIP_WAITING' });
+            toast.classList.remove('visible');
+        });
+        document.getElementById('btn-dismiss').addEventListener('click', () => {
+            toast.classList.remove('visible');
+        });
+    }
+    toast.classList.add('visible');
+}
+
+navigator.serviceWorker.addEventListener('controllerchange', () => {
+    window.location.reload();
+});
+
+
+function checkForUpdate() {
+    console.log("Checking for update...");
+    navigator.serviceWorker.getRegistration()
+        .then(reg => {
+            if (!reg) {
+                console.log("No service worker registered.");
+                return;
+            }
+            reg.update().then(updatedReg => {
+                if (updatedReg && updatedReg.installing) {
+                     console.log("Update found and installing.");
+                } else {
+                     alert("You are on the latest version.");
+                }
+            });
+        })
+        .catch(err => console.log("Update check failed:", err));
+}
+
+
+// --- Dictionary Loading ---
 async function loadDictionary() {
     const loader = document.getElementById('grid-loader');
     const msgText = document.getElementById('loader-msg');
@@ -136,19 +207,23 @@ function generateGridLetters() {
     });
 }
 
-function initGame() {
-    localStorage.removeItem(GAME_SAVE_KEY);
-    if (!state.isDictLoaded) return;
-
-    // Display Version Watermark
+function displayVersion() {
     let versionEl = document.getElementById('version-watermark');
     if (!versionEl) {
         versionEl = document.createElement('div');
         versionEl.id = 'version-watermark';
-        versionEl.style.cssText = "position:fixed; bottom:5px; right:5px; opacity:0.3; font-size:0.7rem; pointer-events:none; z-index:100; font-family:sans-serif;";
+        versionEl.style.cssText = "position:fixed; bottom:5px; right:5px; opacity:0.5; font-size:0.7rem; cursor:pointer; z-index:100; font-family:sans-serif;";
         document.body.appendChild(versionEl);
+        versionEl.addEventListener('click', checkForUpdate);
     }
     versionEl.innerText = typeof VERSION !== 'undefined' ? "v" + VERSION : "";
+}
+
+function initGame() {
+    localStorage.removeItem(GAME_SAVE_KEY);
+    if (!state.isDictLoaded) return;
+
+    displayVersion();
 
     const loader = document.getElementById('grid-loader');
     const loaderText = document.getElementById('loader-msg');
@@ -826,6 +901,7 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // Start loading
+registerServiceWorker();
 loadDictionary();
 // --- Save/Restore Logic ---
 
@@ -879,6 +955,7 @@ function restoreGame() {
             updateListUI();
             renderGrid();
             startTimer();
+            displayVersion();
             
             document.getElementById('btn-pause').innerText = "Pause";
             document.getElementById('grid').style.opacity = "1";
@@ -889,4 +966,3 @@ function restoreGame() {
     } catch (e) { return false; }
 }
 // --- END OF FILE ---
-// ANCHOR

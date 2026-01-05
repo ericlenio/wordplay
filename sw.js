@@ -1,4 +1,4 @@
-const cacheName = 'wordplay-v1';
+const cacheName = 'wordplay-v2';
 const assetsToCache = [
   './',
   './index.html',
@@ -7,6 +7,12 @@ const assetsToCache = [
   './manifest.json',
   './gemini/icon.svg'
 ];
+
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
 
 // Install event: cache the assets
 self.addEventListener('install', event => {
@@ -25,5 +31,20 @@ self.addEventListener('fetch', event => {
       .then(response => {
         return response || fetch(event.request);
       })
+  );
+});
+
+// Clean up old caches
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cache => {
+          if (cache !== cacheName) {
+            return caches.delete(cache);
+          }
+        })
+      );
+    })
   );
 });
