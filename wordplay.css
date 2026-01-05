@@ -35,6 +35,10 @@
     }
 }
 
+html {
+    height: 100%;
+}
+
 * {
     box-sizing: border-box;
 }
@@ -47,10 +51,10 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    height: 100vh;
     height: 100dvh; /* Mobile URL bar fix */
+    -webkit-user-select: none; /* Safari */
+    -ms-user-select: none; /* IE 10+ */
     user-select: none;
-    overflow: hidden;
     transition: background-color 0.3s, color 0.3s;
 }
 
@@ -232,6 +236,7 @@ button.danger:active:not(:disabled) { background: #d32f2f; }
 /* Found Words List */
 #list-container {
     flex: 1;
+    min-height: 0;
     width: 100%;
     max-width: 500px;
     background: var(--list-bg);
@@ -268,6 +273,7 @@ button.danger:active:not(:disabled) { background: #d32f2f; }
     background: rgba(0,0,0,0.03);
     font-size: 0.85rem;
     animation: slideIn 0.3s ease-out;
+    min-width: 0;
 }
 .word-row:first-child { font-weight: normal; }
 .word-points { color: var(--found-color); font-weight: bold; margin-left: 5px; font-size: 0.8em; }
@@ -361,7 +367,7 @@ h2 { margin-top: 0; color: var(--primary); margin-bottom: 15px; }
     padding: 5px;
     margin: 10px 0;
     font-size: 0.9rem;
-    min-height: 50px;
+    min-height: 0;
 }
 
 .res-row {
@@ -448,7 +454,6 @@ input[type="number"].setting-input {
   right: 0;
   bottom: 0;
   background-color: #ccc;
-  -webkit-transition: .4s;
   transition: .4s;
 }
 
@@ -460,7 +465,6 @@ input[type="number"].setting-input {
   left: 4px;
   bottom: 4px;
   background-color: white;
-  -webkit-transition: .4s;
   transition: .4s;
 }
 
@@ -473,8 +477,6 @@ input:focus + .slider {
 }
 
 input:checked + .slider:before {
-  -webkit-transform: translateX(22px);
-  -ms-transform: translateX(22px);
   transform: translateX(22px);
 }
 
