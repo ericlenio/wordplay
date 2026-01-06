@@ -1,4 +1,4 @@
-const VERSION = "1.0.18";
+const VERSION = "1.0.19";
 // --- Configuration ---
 const DICT_URL = "https://raw.githubusercontent.com/jesstess/Scrabble/master/scrabble/sowpods.txt";
 const DEF_API_URL = "https://api.dictionaryapi.dev/api/v2/entries/en/";
@@ -735,7 +735,10 @@ function endGame(title = "Game Over") {
         document.getElementById('final-total-count').innerText = state.totalPossibleWords;
 
     const listContainer = document.getElementById('final-word-list');
-    listContainer.innerHTML = state.allSolutions.map(item => {
+    // Sort allSolutions alphabetically for display on the finish screen
+    const alphabeticallySortedSolutions = [...state.allSolutions].sort((a, b) => a.word.localeCompare(b.word));
+
+    listContainer.innerHTML = alphabeticallySortedSolutions.map(item => {
         const isFound = state.foundWordsSet.has(item.word);
         const cssClass = isFound ? 'res-row found' : 'res-row missed';
         const icon = isFound ? '✓' : '';
