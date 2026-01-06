@@ -1,4 +1,4 @@
-const VERSION = "1.0.19";
+const VERSION = "1.0.20";
 // --- Configuration ---
 const DICT_URL = "https://raw.githubusercontent.com/jesstess/Scrabble/master/scrabble/sowpods.txt";
 const DEF_API_URL = "https://api.dictionaryapi.dev/api/v2/entries/en/";
@@ -113,17 +113,40 @@ function checkForUpdate() {
         .then(reg => {
             if (!reg) {
                 console.log("No service worker registered.");
+                alert("Update check failed: No service worker is controlling the page.");
                 return;
             }
-            reg.update().then(updatedReg => {
-                if (updatedReg && updatedReg.installing) {
-                     console.log("Update found and installing.");
-                } else {
-                     alert("You are on the latest version.");
+            
+            // reg.update() returns a Promise that resolves when the update check is complete.
+            // It fetches the service worker script and compares it byte-by-byte.
+            reg.update().then(newReg => {
+                // The installing property of the registration is set if a new service worker is found and is being installed.
+                if (newReg.installing) {
+                    console.log("Update found and is installing.");
+                    // The 'updatefound' event on the registration will handle the rest.
+                    // We don't need to alert the user here as the toast notification will be shown.
+                } 
+                // If there's no new service worker being installed, but there is an active one,
+                // it means the user is on the latest version.
+                else if (newReg.active) {
+                    console.log("No update available. Already on the latest version.");
+                    alert("You are on the latest version.");
                 }
+                // This case handles when the check completes but nothing has changed 
+                // (e.g., same version, offline).
+                else {
+                    console.log("Update check completed, no new version found.");
+                    alert("You are on the latest version.");
+                }
+            }).catch(err => {
+                console.error("Service worker update check failed:", err);
+                alert("Update check failed. See console for details.");
             });
         })
-        .catch(err => console.log("Update check failed:", err));
+        .catch(err => {
+            console.error("Failed to get service worker registration:", err);
+            alert("Update check failed. See console for details.");
+        });
 }
 
 
