@@ -27,10 +27,19 @@ self.addEventListener('install', event => {
 // Fetch event: serve assets from cache, or fetch from network
 self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        return response || fetch(event.request);
-      })
+    fetch(event.request).then(response => {
+      // If we get a valid response, cache it and return it
+      if (response && response.status === 200) {
+        const responseToCache = response.clone();
+        caches.open(cacheName).then(cache => {
+          cache.put(event.request, responseToCache);
+        });
+      }
+      return response;
+    }).catch(() => {
+      // If the network request fails, fall back to the cache
+      return caches.match(event.request);
+    })
   );
 });
 

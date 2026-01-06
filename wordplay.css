@@ -85,7 +85,7 @@ body {
     justify-content: center;
     align-items: center;
     width: 100%;
-    max-width: 500px;
+    max-width: 600px;
     padding: 10px;
 }
 
@@ -95,7 +95,7 @@ body {
     gap: 8px;
     width: 85vw;
     height: 85vw;
-    max-width: 320px;
+    max-width: 600px;
     max-height: 320px;
     background: #aaa;
     padding: 8px;
@@ -306,7 +306,7 @@ button.danger:active:not(:disabled) { background: #d32f2f; }
     border-radius: 5px;
     text-align: center;
     width: 90%;
-    max-width: 350px;
+    max-width: 600px;
     max-height: 80vh;
     display: flex;
     flex-direction: column;
@@ -314,7 +314,7 @@ button.danger:active:not(:disabled) { background: #d32f2f; }
     overflow: hidden;
 }
 
-h2 { margin-top: 0; color: var(--primary); margin-bottom: 15px; }
+h2 { margin-top: 0; color: var(--primary); margin-bottom: 15px; font-size: 1.5rem; }
 
 /* Summary Specific */
 #summary-stats { 
