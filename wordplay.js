@@ -1,12 +1,14 @@
-const VERSION = "1.0.25";
+const VERSION = "1.0.26";
 // --- Configuration ---
-const DICT_URL = "https://raw.githubusercontent.com/jesstess/Scrabble/master/scrabble/sowpods.txt";
+const DICT_URL_COMMON = "https://raw.githubusercontent.com/first20hours/google-10000-english/master/google-10000-english.txt";
+const DICT_URL_SCRABBLE = "https://raw.githubusercontent.com/jesstess/Scrabble/master/scrabble/sowpods.txt";
 const DEF_API_URL = "https://api.dictionaryapi.dev/api/v2/entries/en/";
 const GRID_SIZE = 4;
 const GAME_DURATION = 180;
 const GENERATION_BATCH_SIZE = 50;    
 const STORAGE_KEY = "wordplay_config_v1";
-const DICT_STORAGE_KEY = "wordplay_dictionary_cache";
+const DICT_STORAGE_KEY_COMMON = "wordplay_dictionary_cache_common";
+const DICT_STORAGE_KEY_SCRABBLE = "wordplay_dictionary_cache_scrabble";
 const GAME_SAVE_KEY = "wordplay_save_v1";
 const HIT_RADIUS_PERCENT = 0.4;
 
@@ -26,6 +28,7 @@ let config = {
     maxWordsOnBoard: 12,
     timerMode: 'stopwatch',
     hapticsEnabled: true,
+    dictionary: 'common',
 };
 
 const savedConfig = localStorage.getItem(STORAGE_KEY);
@@ -143,6 +146,9 @@ async function loadDictionary() {
     const msgText = document.getElementById('loader-msg');
     const msgArea = document.getElementById('message-area');
     
+    const currentDictUrl = config.dictionary === 'common' ? DICT_URL_COMMON : DICT_URL_SCRABBLE;
+    const currentDictStorageKey = config.dictionary === 'common' ? DICT_STORAGE_KEY_COMMON : DICT_STORAGE_KEY_SCRABBLE;
+    
     const processDictionaryText = (text) => {
         state.dictionaryArr = text.toUpperCase().split(/\r?\n/).filter(w => w.length >= 2).sort();
         state.dictionarySet = new Set(state.dictionaryArr);
@@ -156,7 +162,7 @@ async function loadDictionary() {
     };
 
     try {
-        const cachedDict = localStorage.getItem(DICT_STORAGE_KEY);
+        const cachedDict = localStorage.getItem(currentDictStorageKey);
         if (cachedDict) {
             msgText.innerText = "Loading from cache...";
             console.warn("Dictionary loaded from local storage cache.");
@@ -170,13 +176,13 @@ async function loadDictionary() {
     try {
         msgText.innerText = "Downloading Dictionary...";
         msgArea.innerText = "Connecting...";
-        const response = await fetch(DICT_URL);
+        const response = await fetch(currentDictUrl);
         if (!response.ok) throw new Error("Network response was not ok");
         
         const text = await response.text();
         
         try {
-            localStorage.setItem(DICT_STORAGE_KEY, text);
+            localStorage.setItem(currentDictStorageKey, text);
             console.log("Dictionary cached to local storage.");
         } catch (e) {
             console.warn("Could not cache dictionary (likely quota exceeded):", e);
@@ -803,6 +809,7 @@ const minLenInput = document.getElementById('setting-min-len');
 const maxWordsInput = document.getElementById('setting-max-words');
 const timerModeInput = document.getElementById('setting-timer-mode');
 const hapticsInput = document.getElementById('setting-haptics');
+const dictionaryInput = document.getElementById('setting-dictionary');
 
 document.getElementById('btn-options').addEventListener('click', () => {
     state.isPaused = true; 
@@ -810,6 +817,7 @@ document.getElementById('btn-options').addEventListener('click', () => {
     maxWordsInput.value = config.maxWordsOnBoard;
     timerModeInput.value = config.timerMode || 'countdown';
     hapticsInput.checked = config.hapticsEnabled;
+    dictionaryInput.value = config.dictionary || 'common';
     optionsModal.classList.add('visible');
 });
 
@@ -818,11 +826,13 @@ document.getElementById('btn-save-settings').addEventListener('click', () => {
     const newMax = parseInt(maxWordsInput.value);
     const newMode = timerModeInput.value;
     const newHaptics = hapticsInput.checked;
+    const newDictionary = dictionaryInput.value;
 
     if(newMin >= 2 && newMin <= 8) config.minWordLength = newMin;
     if(newMax >= 1) config.maxWordsOnBoard = newMax;
     config.timerMode = newMode;
     config.hapticsEnabled = newHaptics;
+    config.dictionary = newDictionary;
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
 
