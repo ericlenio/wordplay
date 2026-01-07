@@ -1,4 +1,4 @@
-const VERSION = "1.0.23";
+const VERSION = "1.0.24";
 // --- Configuration ---
 const DICT_URL = "https://raw.githubusercontent.com/jesstess/Scrabble/master/scrabble/sowpods.txt";
 const DEF_API_URL = "https://api.dictionaryapi.dev/api/v2/entries/en/";
@@ -901,7 +901,11 @@ document.getElementById('btn-stop-gen').addEventListener('click', () => {
     state.stopGeneration = true;
 });
 
-document.getElementById('btn-finish').addEventListener('click', () => endGame("Game Finished"));
+document.getElementById('btn-finish').addEventListener('click', () => {
+    if (confirm("Are you sure you want to finish the game?")) {
+        endGame("Game Finished");
+    }
+});
 
 document.getElementById('btn-rotate').addEventListener('click', () => {
     const grid = document.getElementById('grid');
