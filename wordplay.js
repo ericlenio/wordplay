@@ -1,4 +1,4 @@
-const VERSION = "1.0.24";
+const VERSION = "1.0.25";
 // --- Configuration ---
 const DICT_URL = "https://raw.githubusercontent.com/jesstess/Scrabble/master/scrabble/sowpods.txt";
 const DEF_API_URL = "https://api.dictionaryapi.dev/api/v2/entries/en/";
@@ -18,29 +18,6 @@ const DICE = [
 ];
 
 const FALLBACK_DICT = new Set(["THE", "AND", "FOR", "ARE", "BUT", "NOT", "YOU", "ALL", "ANY", "CAN", "HER", "WAS", "ONE", "OUR", "OUT", "DAY", "GET", "HAS", "HIM", "HIS", "HOW", "MAN", "NEW", "NOW", "OLD", "SEE", "TWO", "WAY", "WHO", "BOY", "DID", "ITS", "LET", "PUT", "SAY", "SHE", "TOO", "USE", "DAD", "MOM", "CAT", "DOG", "RUN", "EAT", "BIG", "RED", "FOX", "LOW", "OWN", "ZOO", "WEB", "FUN", "WIN", "HOT", "SIX", "TEN", "YES", "WORD", "PLAY", "GAME"]);
-
-function audioHapticFeedback(duration = 50) {
-    if (!window.AudioContext && !window.webkitAudioContext) return;
-    try {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioCtx.createOscillator();
-        const gainNode = audioCtx.createGain();
-
-        oscillator.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-
-        oscillator.frequency.value = 50; 
-        gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-        gainNode.gain.linearRampToValueAtTime(1, audioCtx.currentTime + 0.01);
-
-        oscillator.start(audioCtx.currentTime);
-        const stopTime = audioCtx.currentTime + duration / 1000;
-        gainNode.gain.exponentialRampToValueAtTime(0.00001, stopTime);
-        oscillator.stop(stopTime);
-    } catch (e) {
-        console.warn("Could not play audio haptic feedback", e);
-    }
-}
 
 
 // Load Config from Local Storage
@@ -495,7 +472,6 @@ function triggerFeedback() {
     setTimeout(() => grid.classList.remove('success-flash'), 300);
     if (config.hapticsEnabled) {
         if (navigator.vibrate) navigator.vibrate(50);
-        audioHapticFeedback(50);
     }
 }
 
@@ -720,7 +696,6 @@ function renderSummaryGrid() {
 window.previewWord = function(indicesJson) {
     if (config.hapticsEnabled) {
         if (navigator.vibrate) navigator.vibrate(20);
-        audioHapticFeedback(20);
     }
 
     let indices;
@@ -863,10 +838,10 @@ document.getElementById('btn-cancel-settings').addEventListener('click', () => {
 document.getElementById('btn-test-haptic').addEventListener('click', () => {
     if (config.hapticsEnabled) {
         if (navigator.vibrate) navigator.vibrate(50);
-        audioHapticFeedback(50);
     }
-    else if (!config.hapticsEnabled) console.warn("Haptics are disabled in settings.");
-    else console.warn("Your browser or device does not support vibration.");
+    else {
+        console.warn("Haptics are disabled in settings.");
+    }
 });
 
 document.getElementById('btn-reset-storage').addEventListener('click', () => {
