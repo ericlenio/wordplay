@@ -1,4 +1,4 @@
-const VERSION = "1.0.32";
+const VERSION = "1.0.33";
 // --- Configuration ---
 const DICT_URL_COMMON = "https://raw.githubusercontent.com/first20hours/google-10000-english/master/google-10000-english.txt";
 const DICT_URL_SCRABBLE = "https://raw.githubusercontent.com/jesstess/Scrabble/master/scrabble/sowpods.txt";
