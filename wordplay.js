@@ -1,4 +1,4 @@
-const VERSION = "1.0.30";
+const VERSION = "1.0.31";
 // --- Configuration ---
 const DICT_URL_COMMON = "https://raw.githubusercontent.com/first20hours/google-10000-english/master/google-10000-english.txt";
 const DICT_URL_SCRABBLE = "https://raw.githubusercontent.com/jesstess/Scrabble/master/scrabble/sowpods.txt";
@@ -25,7 +25,7 @@ const FALLBACK_DICT = new Set(["THE", "AND", "FOR", "ARE", "BUT", "NOT", "YOU", 
 // Load Config from Local Storage
 let config = {
     minWordLength: 4,
-    maxWordsOnBoard: 12,
+    maxWordsOnBoard: 10,
     timerMode: 'stopwatch',
     hapticsEnabled: true,
     dictionary: 'common',
