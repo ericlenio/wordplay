@@ -1,4 +1,4 @@
-const VERSION = "1.0.31";
+const VERSION = "1.0.32";
 // --- Configuration ---
 const DICT_URL_COMMON = "https://raw.githubusercontent.com/first20hours/google-10000-english/master/google-10000-english.txt";
 const DICT_URL_SCRABBLE = "https://raw.githubusercontent.com/jesstess/Scrabble/master/scrabble/sowpods.txt";
@@ -158,7 +158,7 @@ async function loadDictionary() {
         loader.style.display = 'none';
         
         enableControls();
-        if (!restoreGame()) initGame();
+        initGame();
     };
 
     try {
@@ -201,7 +201,7 @@ async function loadDictionary() {
         loader.style.display = 'none';
         
         enableControls();
-        if (!restoreGame()) initGame();
+        initGame();
     }
 }
 
@@ -878,6 +878,7 @@ document.getElementById('btn-save-settings').addEventListener('click', () => {
     optionsModal.classList.remove('visible');
     
     if (dictionaryChanged) {
+        localStorage.removeItem(GAME_SAVE_KEY);
         state.isDictLoaded = false;
         loadDictionary(); // This will now fetch the new dictionary and then call initGame
     } else {
