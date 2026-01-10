@@ -1,4 +1,4 @@
-const VERSION = "1.0.29";
+const VERSION = "1.0.30";
 // --- Configuration ---
 const DICT_URL_COMMON = "https://raw.githubusercontent.com/first20hours/google-10000-english/master/google-10000-english.txt";
 const DICT_URL_SCRABBLE = "https://raw.githubusercontent.com/jesstess/Scrabble/master/scrabble/sowpods.txt";
@@ -865,6 +865,8 @@ document.getElementById('btn-save-settings').addEventListener('click', () => {
     const newHaptics = hapticsInput.checked;
     const newDictionary = dictionaryInput.value;
 
+    const dictionaryChanged = newDictionary !== config.dictionary;
+
     if(newMin >= 2 && newMin <= 8) config.minWordLength = newMin;
     if(newMax >= 1) config.maxWordsOnBoard = newMax;
     config.timerMode = newMode;
@@ -874,7 +876,13 @@ document.getElementById('btn-save-settings').addEventListener('click', () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
 
     optionsModal.classList.remove('visible');
-    loadDictionary(); 
+    
+    if (dictionaryChanged) {
+        state.isDictLoaded = false;
+        loadDictionary(); // This will now fetch the new dictionary and then call initGame
+    } else {
+        initGame(); // If dictionary is the same, just start a new game
+    }
 });
 
 document.getElementById('btn-cancel-settings').addEventListener('click', () => {
