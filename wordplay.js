@@ -1,4 +1,4 @@
-const VERSION = "1.0.27";
+const VERSION = "1.0.28";
 // --- Configuration ---
 const DICT_URL_COMMON = "https://raw.githubusercontent.com/first20hours/google-10000-english/master/google-10000-english.txt";
 const DICT_URL_SCRABBLE = "https://raw.githubusercontent.com/jesstess/Scrabble/master/scrabble/sowpods.txt";
@@ -874,7 +874,7 @@ document.getElementById('btn-save-settings').addEventListener('click', () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
 
     optionsModal.classList.remove('visible');
-    initGame(); 
+    loadDictionary(); 
 });
 
 document.getElementById('btn-cancel-settings').addEventListener('click', () => {
@@ -894,7 +894,8 @@ document.getElementById('btn-test-haptic').addEventListener('click', () => {
 document.getElementById('btn-reset-storage').addEventListener('click', () => {
     if (confirm("Are you sure you want to reset ALL game data? This is irreversible and will reload the page.")) {
         localStorage.removeItem(STORAGE_KEY);
-        localStorage.removeItem(DICT_STORAGE_KEY);
+        localStorage.removeItem(DICT_STORAGE_KEY_COMMON);
+        localStorage.removeItem(DICT_STORAGE_KEY_SCRABBLE);
         localStorage.removeItem(GAME_SAVE_KEY);
         location.reload();
     }
