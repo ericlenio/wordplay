@@ -1,4 +1,4 @@
-const VERSION = "1.0.26";
+const VERSION = "1.0.27";
 // --- Configuration ---
 const DICT_URL_COMMON = "https://raw.githubusercontent.com/first20hours/google-10000-english/master/google-10000-english.txt";
 const DICT_URL_SCRABBLE = "https://raw.githubusercontent.com/jesstess/Scrabble/master/scrabble/sowpods.txt";
@@ -233,6 +233,47 @@ function displayVersion() {
         versionEl.addEventListener('click', checkForUpdate);
     }
     versionEl.innerText = typeof VERSION !== 'undefined' ? "v" + VERSION : "";
+}
+
+let hapticAudioCtx;
+let hapticBuffer;
+
+async function playHapticFeedback(duration) {
+  if (!config.hapticsEnabled) {
+    return;
+  }
+
+  if (navigator.vibrate) {
+    navigator.vibrate(duration);
+  }
+
+  if (!hapticAudioCtx) {
+    try {
+      hapticAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const sampleRate = hapticAudioCtx.sampleRate;
+      const numChannels = 1;
+      const bufferDuration = 0.01;
+      const bufferSize = sampleRate * bufferDuration;
+      hapticBuffer = hapticAudioCtx.createBuffer(numChannels, bufferSize, sampleRate);
+      const data = hapticBuffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = 0;
+      }
+    } catch (e) {
+      console.warn("Could not create haptic audio context", e);
+      hapticAudioCtx = null;
+      return;
+    }
+  }
+  
+  try {
+    const source = hapticAudioCtx.createBufferSource();
+    source.buffer = hapticBuffer;
+    source.connect(hapticAudioCtx.destination);
+    source.start(0);
+  } catch (e) {
+    console.warn("Could not play haptic feedback", e);
+  }
 }
 
 function initGame() {
@@ -476,9 +517,7 @@ function triggerFeedback() {
     const grid = document.getElementById('grid');
     grid.classList.add('success-flash');
     setTimeout(() => grid.classList.remove('success-flash'), 300);
-    if (config.hapticsEnabled) {
-        if (navigator.vibrate) navigator.vibrate(50);
-    }
+    playHapticFeedback(50);
 }
 
 function submitWord() {
@@ -700,9 +739,7 @@ function renderSummaryGrid() {
 }
 
 window.previewWord = function(indicesJson) {
-    if (config.hapticsEnabled) {
-        if (navigator.vibrate) navigator.vibrate(20);
-    }
+    playHapticFeedback(20);
 
     let indices;
     if (typeof indicesJson === 'string') {
@@ -892,15 +929,7 @@ document.getElementById('btn-finish').addEventListener('click', () => {
     }
 });
 
-document.getElementById('btn-rotate').addEventListener('click', () => {
-    const grid = document.getElementById('grid');
-    let rotation = parseInt(grid.dataset.rotation || 0) + 90;
-    grid.style.transform = `rotate(${rotation}deg)`;
-    grid.dataset.rotation = rotation;
-    document.querySelectorAll('.tile').forEach(t => {
-        t.style.transform = `rotate(${-rotation}deg)`;
-    });
-});
+
 
 document.getElementById('btn-restart').addEventListener('click', () => {
     document.getElementById('summary-overlay').classList.remove('visible');
