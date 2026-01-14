@@ -16,7 +16,7 @@
     /* Status Colors */
     --found-color: #4caf50;
     --valid-select: #66bb6a;
-    --missed-color: #999;
+    --missed-color: #777;
     --remaining-color: #f57c00;
     --preview-path: #ff9800;
 }
@@ -32,6 +32,7 @@
         --tile-shadow: rgba(0,0,0,0.5);
         --list-bg: #1e1e1e;
         --list-border: #333;
+        --missed-color: #aaa;
     }
 }
 
@@ -366,7 +367,7 @@ h2 { margin-top: 0; color: var(--primary); margin-bottom: 15px; font-size: 1.5re
     border: 1px solid var(--list-border);
     padding: 5px;
     margin: 10px 0;
-    font-size: 0.9rem;
+    font-size: 1.2rem;
     min-height: 0;
 }
 
