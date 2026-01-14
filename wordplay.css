@@ -256,28 +256,27 @@ button.danger:active:not(:disabled) { background: #d32f2f; }
     font-weight: bold;
 }
 
-/* Updated Layout: Left-to-Right Wrapped Pills */
 #found-words-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
+    font-size: 1.2rem;
     padding-bottom: 10px;
 }
 
 .word-row {
-    display: inline-flex;
+    display: flex;
+    justify-content: space-between;
     align-items: center;
-    width: auto;
-    padding: 4px 8px;
-    border: 1px solid var(--list-border);
-    border-radius: 12px;
-    background: rgba(0,0,0,0.03);
-    font-size: 0.85rem;
+    padding: 8px 5px;
+    border-bottom: 1px solid var(--list-border);
+    color: var(--found-color);
+    font-weight: bold;
     animation: slideIn 0.3s ease-out;
-    min-width: 0;
 }
-.word-row:first-child { font-weight: normal; }
-.word-points { color: var(--found-color); font-weight: bold; margin-left: 5px; font-size: 0.8em; }
+
+.word-points {
+    font-weight: normal;
+    opacity: 0.7;
+    font-size: 0.9rem;
+}
 
 @keyframes slideIn {
     from { opacity: 0; transform: translateY(-10px); }
