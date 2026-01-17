@@ -214,9 +214,9 @@ button {
     background: var(--primary);
     color: white;
     border: none;
-    padding: 8px 6px; /* Reduced padding for mobile */
+    padding: 12px 10px;
     border-radius: 4px;
-    font-size: 0.85rem; /* Slightly smaller font */
+    font-size: 1.1rem;
     text-transform: uppercase;
     cursor: pointer;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
@@ -261,7 +261,7 @@ button.danger:active:not(:disabled) { background: #d32f2f; }
     padding-bottom: 10px;
 }
 
-.word-row {
+.res-row {
     display: flex;
     justify-content: space-between;
     align-items: center;

@@ -1,4 +1,4 @@
-const VERSION = "1.0.36";
+const VERSION = "1.0.38";
 // --- Configuration ---
 const DICT_URL_COMMON = "https://raw.githubusercontent.com/rressler/data_raw_courses/main/enable1_words.txt";
 const DICT_URL_SCRABBLE = "https://raw.githubusercontent.com/jesstess/Scrabble/master/scrabble/sowpods.txt";
@@ -19,7 +19,7 @@ const DICE = [
     "EIOSST", "ELRTTY", "HIMNQU", "HLNNRZ"
 ];
 
-const FALLBACK_DICT = new Set(["THE", "AND", "FOR", "ARE", "BUT", "NOT", "YOU", "ALL", "ANY", "CAN", "HER", "WAS", "ONE", "OUR", "OUT", "DAY", "GET", "HAS", "HIM", "HIS", "HOW", "MAN", "NEW", "NOW", "OLD", "SEE", "TWO", "WAY", "WHO", "BOY", "DID", "ITS", "LET", "PUT", "SAY", "SHE", "TOO", "USE", "DAD", "MOM", "CAT", "DOG", "RUN", "EAT", "BIG", "RED", "FOX", "LOW", "OWN", "ZOO", "WEB", "FUN", "WIN", "HOT", "SIX", "TEN", "YES", "WORD", "PLAY", "GAME"]);
+const FALLBACK_DICT = new Set(["THE", "AND", "FOR", "ARE", "BUT", "NOT", "YOU", "ALL", "ANY", "CAN", "HER", "WAS", "ONE", "OUR", "OUT", "DAY", "GET", "HAS", "HIM", "HIS", "HOW", "MAN", "NEW", "NOW", "OLD", "SEE", "TWO", "WAY", "WHO", "BOY", "DID", "ITS", "LET", "PUT", "SAY", "SHE", "TOO", "USE", "DAD", "MOM", "CAT", "DOG", "RUN", "EAT", "BIG", "RED", "FOX", "LOW", "OWN", "ZOO", "WEB", "FUN", "WIN", "HOT", "SIX", "TEN", "YES", "WORD", "PLAY", "GAME"])
 
 
 // Load Config from Local Storage
@@ -289,9 +289,7 @@ function initGame() {
     
     loader.style.display = 'flex';
     loaderText.innerText = "Generating Board...";
-    btnStop.style.display = 'block'; 
-    if(!gridEl.contains(loader)) gridEl.appendChild(loader);
-
+        if(!gridEl.contains(loader)) gridEl.appendChild(loader);
     document.getElementById('summary-overlay').classList.remove('visible');
     state.stopGeneration = false; 
     
@@ -372,7 +370,7 @@ function renderGrid() {
     const gridEl = document.getElementById('grid');
     const loader = document.getElementById('grid-loader');
     gridEl.innerHTML = '';
-    gridEl.appendChild(loader); 
+    if(!gridEl.contains(loader)) gridEl.appendChild(loader); 
     
     state.grid.forEach((letter, index) => {
         const tile = document.createElement('div');
@@ -602,7 +600,7 @@ function updateListUI() {
     // Sort words alphabetically (A-Z)
     const sortedList = [...state.foundWordsList].sort((a, b) => a.word.localeCompare(b.word));
     listEl.innerHTML = sortedList.map(item => 
-        `<div class="word-row">
+        `<div class="res-row found">
             <span>${item.word}</span>
             <span class="word-points">${item.points}</span>
         </div>`
@@ -979,7 +977,7 @@ loadDictionary();
 window.addEventListener("pagehide", saveGameState);
 
 function saveGameState() {
-    if (!state.isPlaying && state.foundWordsList.length === 0) return;
+    if (!state.isPlaying && state.foundWordsList.length === 0) return; 
     
     const data = {
         grid: state.grid,
