@@ -1,4 +1,4 @@
-const VERSION = "1.0.38";
+const VERSION = "1.0.39";
 // --- Configuration ---
 const DICT_URL_COMMON = "https://raw.githubusercontent.com/rressler/data_raw_courses/main/enable1_words.txt";
 const DICT_URL_SCRABBLE = "https://raw.githubusercontent.com/jesstess/Scrabble/master/scrabble/sowpods.txt";
